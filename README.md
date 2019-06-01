@@ -1,4 +1,4 @@
-# MNIST---CDN
+# MNIST - CNN
 
 ### Descrição
 
