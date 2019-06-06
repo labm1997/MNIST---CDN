@@ -6,6 +6,13 @@ import csv
 from mnist import MNIST
 import optparse
 
+# Keras imports:
+from keras.models import Sequential
+from keras.layers.convolutional import Conv2D
+from keras.layers.convolutional import MaxPooling2D
+from keras.layers.core import Activation
+from keras.layers.core import Dense
+
 # User imports:
 import fuzzymatrix
 import plot
@@ -32,3 +39,15 @@ np_train_images, np_train_labels = mndata.load_training()
 np_test_images, np_test_labels = mndata.load_testing()
 
 print("(Done!)")
+
+
+## Keras Model for CNN:
+model = Sequential()
+
+model.add(Conv2D(4, (5,5), padding="same", input_shape=(1,28,28)))
+model.add(MaxPooling2D(pool_size=(2,2)))
+model.add(Conv2D(6, (5,5), padding="same"))
+model.add(MaxPooling2D(pool_size=(2,2)))
+model.add(Dense(500))
+model.add(Dense(10))
+model.add(Activation("softmax"))
