@@ -15,6 +15,7 @@ from keras import backend as K
 # User imports:
 import fuzzymatrix
 import plot
+import csvconverter
 
 # Main function:
 
@@ -88,3 +89,8 @@ print("Model trained!")
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Validation loss:', score[0])
 print('Validation accuracy:', score[1])
+
+
+# Save training history in .csv file
+csvconverter.savecsv(training_history.history)
+
