@@ -2,7 +2,7 @@
 # digits from the MNIST database.
 
 # Package imports:
-import optparse
+import argparse
 
 # Keras imports:
 import keras
@@ -13,22 +13,24 @@ from keras.layers.core import Activation, Dense, Flatten
 from keras import backend as K
 
 # User imports:
+import csvconverter
 import fuzzymatrix
 import plot
-import csvconverter
 
 # Main function:
 
 ## Program arguments:
-parser = optparse.OptionParser()
-parser.add_option('-o', action='store', dest="filename", help="filename prefix to save plot images")
-options, args = parser.parse_args()
+parser = argparse.ArgumentParser()
+parser.add_argument('-o', '--output-file', dest='filename',
+                    default='results.csv',
+                    help="filename prefix to save plot images")
+args = parser.parse_args()
 
 ## Training settings:
-batch_size = 128
+batch_size = 20
 img_rows, img_cols = 28, 28
 num_classes = 10
-epochs = 2
+epochs = 100
 
 ## Data extraction:
 print("Extracting data...")
@@ -90,7 +92,5 @@ score = model.evaluate(x_test, y_test, verbose=0)
 print('Validation loss:', score[0])
 print('Validation accuracy:', score[1])
 
-
 # Save training history in .csv file
-csvconverter.savecsv(training_history.history)
-
+csvconverter.savecsv(training_history.history, args.filename)
