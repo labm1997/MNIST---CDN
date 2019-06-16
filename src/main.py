@@ -13,27 +13,30 @@ from keras.layers.core import Activation, Dense, Flatten
 from keras import backend as K
 
 # User imports:
-import csvconverter
 import batchlog
+import csvconverter
 import plot
 
 # Main function:
 
 ## Program arguments:
 parser = argparse.ArgumentParser()
-parser.add_argument('-o', '--output-file', dest='filename',
-                    default='results.csv',
-                    help="filename of history csv output")
-parser.add_argument('-ob', '--output-batch-file', dest='filename_batch',
+parser.add_argument('-b', '--batch-size', dest='batch_size', type=int,
+                    default=128,
+                    help="batch size used for training")
+parser.add_argument('-e', '--epochs', dest='epochs', type=int, default=10,
+                    help="number of training epochs")
+parser.add_argument('-bf', '--batch-file', dest='filename_batch',
                     default='results_batch.csv',
                     help="filename of batch history csv output")
+parser.add_argument('-tf', '--train-file', dest='filename_train',
+                    default='results_train.csv',
+                    help="filename of training history csv output")
 args = parser.parse_args()
 
 ## Training settings:
-batch_size = 128
 img_rows, img_cols = 28, 28
 num_classes = 10
-epochs = 10
 
 ## Data extraction:
 print("Extracting data...")
@@ -85,8 +88,8 @@ print("Training model...")
 batch_history = batchlog.BatchLog()
 
 training_history = model.fit(x_train, y_train,
-                             batch_size=batch_size,
-                             epochs=epochs,
+                             batch_size=args.batch_size,
+                             epochs=args.epochs,
                              verbose=1,
                              validation_data=(x_test, y_test),
                              callbacks=[batch_history])
@@ -98,8 +101,9 @@ score = model.evaluate(x_test, y_test, verbose=0)
 print('Validation loss:', score[0])
 print('Validation accuracy:', score[1])
 
-# Save training history in .csv file
-csvconverter.savecsv(csvconverter.converter(training_history.history), args.filename)
+## Save training history in .csv file
+csvconverter.savecsv(csvconverter.converter(training_history.history),
+                     args.filename_train)
 
-# Save batch history in .csv file
+## Save batch history in .csv file
 csvconverter.savecsv(batch_history.log, args.filename_batch)
