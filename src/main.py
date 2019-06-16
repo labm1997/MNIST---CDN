@@ -14,7 +14,7 @@ from keras import backend as K
 
 # User imports:
 import csvconverter
-import fuzzymatrix
+import batchlog
 import plot
 
 # Main function:
@@ -23,14 +23,17 @@ import plot
 parser = argparse.ArgumentParser()
 parser.add_argument('-o', '--output-file', dest='filename',
                     default='results.csv',
-                    help="filename prefix to save plot images")
+                    help="filename of history csv output")
+parser.add_argument('-ob', '--output-batch-file', dest='filename_batch',
+                    default='results_batch.csv',
+                    help="filename of batch history csv output")
 args = parser.parse_args()
 
 ## Training settings:
-batch_size = 20
+batch_size = 128
 img_rows, img_cols = 28, 28
 num_classes = 10
-epochs = 100
+epochs = 10
 
 ## Data extraction:
 print("Extracting data...")
@@ -79,11 +82,14 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 ## Train model:
 print("Training model...")
 
+batch_history = batchlog.BatchLog()
+
 training_history = model.fit(x_train, y_train,
                              batch_size=batch_size,
                              epochs=epochs,
                              verbose=1,
-                             validation_data=(x_test, y_test))
+                             validation_data=(x_test, y_test),
+                             callbacks=[batch_history])
 
 print("Model trained!")
 
@@ -93,4 +99,7 @@ print('Validation loss:', score[0])
 print('Validation accuracy:', score[1])
 
 # Save training history in .csv file
-csvconverter.savecsv(training_history.history, args.filename)
+csvconverter.savecsv(csvconverter.converter(training_history.history), args.filename)
+
+# Save batch history in .csv file
+csvconverter.savecsv(batch_history.log, args.filename_batch)

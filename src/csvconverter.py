@@ -18,9 +18,9 @@ def converter(a):
   return out
 
 ## Method to save the csv data in a file:
-def savecsv(trainHistory, filename='result.csv'):
+def savecsv(rows, filename='result.csv'):
   with open(filename, 'w') as f:
-    w = csv.DictWriter(f, trainHistory.keys())
+    w = csv.DictWriter(f, rows[0].keys())
     w.writeheader()
-    for data in converter(trainHistory):
+    for data in rows:
       w.writerow(data)
