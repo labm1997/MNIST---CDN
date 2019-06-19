@@ -3,6 +3,7 @@
 
 # Package imports:
 import argparse
+import numpy as np
 
 # Keras imports:
 import keras
@@ -16,6 +17,7 @@ from keras import backend as K
 import batchlog
 import csvconverter
 import plot
+import savefig
 
 # Main function:
 
@@ -107,3 +109,36 @@ csvconverter.savecsv(csvconverter.converter(training_history.history),
 
 ## Save batch history in .csv file
 csvconverter.savecsv(batch_history.log, args.filename_batch)
+
+
+## Save predicted
+y_train_pred = model.predict(x_train)
+y_train_pred = list(map(lambda x: np.argmax(x), y_train_pred))
+
+## Get train labels
+y_train_labels = list(map(lambda x: np.argmax(x), y_train))
+
+## Get wrong predictions
+diff_train = []
+for index, v in enumerate(zip(y_train_pred, y_train_labels)):
+  if v[0] != v[1]:
+    diff_train.append((index, v))
+
+
+## Save validation predicted
+y_test_pred = model.predict(x_test)
+y_test_pred = list(map(lambda x: np.argmax(x), y_test_pred))
+
+## Get validation labels
+y_test_labels = list(map(lambda x: np.argmax(x), y_test))
+
+## Get wrong predictions
+diff_test = []
+for index, v in enumerate(zip(y_test_pred, y_test_labels)):
+  if v[0] != v[1]:
+    diff_test.append((index, v))
+
+
+## Save activations for some examples
+savefig.saveActivations('train_1000', model, np.array([x_train[1000]]))
+savefig.saveActivations('train_2000', model, np.array([x_train[2000]]))
