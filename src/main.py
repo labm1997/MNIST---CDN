@@ -7,11 +7,12 @@ import numpy as np
 
 # Keras imports:
 import keras
+from keras import backend as K
 from keras.datasets import mnist
-from keras.models import Sequential
+from keras.models import Model, Sequential
 from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers.core import Activation, Dense, Flatten
-from keras import backend as K
+import numpy as np
 
 # User imports:
 import batchlog
@@ -34,6 +35,8 @@ parser.add_argument('-bf', '--batch-file', dest='filename_batch',
 parser.add_argument('-tf', '--train-file', dest='filename_train',
                     default='results_train.csv',
                     help="filename of training history csv output")
+parser.add_argument('-wf', '--weights-file', dest='filename_weights',
+                    help="load CNN weights from a file instead of training")
 args = parser.parse_args()
 
 ## Training settings:
@@ -72,9 +75,9 @@ print("Data formatted!")
 ## Keras Model for CNN:
 model = Sequential()
 
-model.add(Conv2D(4, (5,5), padding="same", input_shape=input_shape))
+model.add(Conv2D(4, (5,5), padding="same", input_shape=input_shape, name="f1"))
 model.add(MaxPooling2D(pool_size=(2,2)))
-model.add(Conv2D(6, (5,5), padding="same"))
+model.add(Conv2D(6, (5,5), padding="same", name="f2"))
 model.add(MaxPooling2D(pool_size=(2,2)))
 model.add(Flatten())
 model.add(Dense(500))
@@ -84,32 +87,63 @@ model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adadelta(),
               metrics=['accuracy'])
 
-## Train model:
-print("Training model...")
+## Print model information:
+print("Model summary:")
+print(model.summary())
 
-batch_history = batchlog.BatchLog()
+if(args.filename_weights):
 
-training_history = model.fit(x_train, y_train,
-                             batch_size=args.batch_size,
-                             epochs=args.epochs,
-                             verbose=1,
-                             validation_data=(x_test, y_test),
-                             callbacks=[batch_history])
+    print("Loading weights...")
+    model.load_weights(args.filename_weights)
+    print("Weights loaded!")
 
-print("Model trained!")
+else:
+
+    ## Train model:
+    print("Training model...")
+
+    batch_history = batchlog.BatchLog()
+
+    training_history = model.fit(x_train, y_train,
+                                 batch_size=args.batch_size,
+                                 epochs=args.epochs,
+                                 verbose=1,
+                                 validation_data=(x_test, y_test),
+                                 callbacks=[batch_history])
+
+    print("Model trained!")
+
+    ## Save training history in .csv file
+    csvconverter.savecsv(csvconverter.converter(training_history.history),
+                         args.filename_train)
+
+    ## Save batch history in .csv file
+    csvconverter.savecsv(batch_history.log, args.filename_batch)
 
 ## Evaluate results:
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Validation loss:', score[0])
 print('Validation accuracy:', score[1])
 
-## Save training history in .csv file
-csvconverter.savecsv(csvconverter.converter(training_history.history),
-                     args.filename_train)
+## Filter weights examples:
+weights = np.array(model.get_layer("f1").get_weights()[0])
 
-## Save batch history in .csv file
-csvconverter.savecsv(batch_history.log, args.filename_batch)
+for w_num in range(4):
+    filter_data = weights.T[w_num][0]
+    plot.save_grayscale_img(filter_data, "f1_weights_" + str(w_num))
 
+## Individual filter outputs:
+filter_model = Model(inputs=model.input, outputs=model.get_layer("f1").output)
+
+for ex_num in range(5):
+    test = x_test[ex_num].reshape(1, img_rows, img_cols, 1)
+    model.predict(test)
+    filter_output = filter_model.predict(test)
+    plot.save_grayscale_img(x_test[ex_num].squeeze(), "input_" + str(ex_num))
+
+    for f_num in range(4):
+        plot.save_grayscale_img(filter_output[:,:,:,f_num:f_num+1].squeeze(),
+                                "filter" + str(f_num) + "_" + str(ex_num)
 
 ## Save predicted
 y_train_pred = model.predict(x_train)
@@ -137,7 +171,6 @@ diff_test = []
 for index, v in enumerate(zip(y_test_pred, y_test_labels)):
   if v[0] != v[1]:
     diff_test.append((index, v))
-
 
 ## Save activations for some examples
 savefig.saveActivations('train_1000', model, np.array([x_train[1000]]))

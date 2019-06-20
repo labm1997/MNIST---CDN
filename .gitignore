@@ -1,2 +1,5 @@
 # Python cache folder:
 src/__pycache__
+
+# CSV outputs:
+csv
