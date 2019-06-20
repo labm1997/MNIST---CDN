@@ -11,6 +11,7 @@ from keras.datasets import mnist
 from keras.models import Model, Sequential
 from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers.core import Activation, Dense, Flatten
+import numpy as np
 
 # User imports:
 import batchlog
@@ -122,4 +123,22 @@ score = model.evaluate(x_test, y_test, verbose=0)
 print('Validation loss:', score[0])
 print('Validation accuracy:', score[1])
 
+## Filter weights examples:
+weights = np.array(model.get_layer("f1").get_weights()[0])
 
+for w_num in range(4):
+    filter_data = weights.T[w_num][0]
+    plot.save_grayscale_img(filter_data, "f1_weights_" + str(w_num))
+
+## Individual filter outputs:
+filter_model = Model(inputs=model.input, outputs=model.get_layer("f1").output)
+
+for ex_num in range(5):
+    test = x_test[ex_num].reshape(1, img_rows, img_cols, 1)
+    model.predict(test)
+    filter_output = filter_model.predict(test)
+    plot.save_grayscale_img(x_test[ex_num].squeeze(), "input_" + str(ex_num))
+
+    for f_num in range(4):
+        plot.save_grayscale_img(filter_output[:,:,:,f_num:f_num+1].squeeze(),
+                                "filter" + str(f_num) + "_" + str(ex_num))

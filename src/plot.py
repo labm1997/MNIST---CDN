@@ -22,6 +22,12 @@ def display_plot(data_list, title, xlabel):
     __add_plot(data_list, title, xlabel)
     plt.show()
 
+# Method to save a grayscale image in a png file.
+def save_grayscale_img(image_data, file_name):
+    plt.matshow(image_data, cmap='gray')
+    plt.savefig(file_name)
+    plt.close()
+
 # Method to save a list of data_plot instances, plotted with pyplot, in a png
 # file.
 def save_plot(data_list, title, xlabel, file_name):
